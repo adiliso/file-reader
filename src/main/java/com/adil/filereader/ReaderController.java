@@ -1,7 +1,6 @@
 package com.adil.filereader;
 
 import com.adil.filereader.model.StockDataModel;
-import com.adil.filereader.service.CsvLoaderService;
 import com.adil.filereader.service.LoaderService;
 import javafx.application.Platform;
 import javafx.scene.control.TableView;
@@ -16,15 +15,17 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static com.adil.filereader.util.AppUtils.CHECKING_INTERVAL;
+import static com.adil.filereader.util.AppUtils.getLoaderService;
 
 public class ReaderController {
-    private ExecutorService executorService = Executors.newSingleThreadExecutor(); // Background thread
-    private final LoaderService loaderService = new CsvLoaderService();
+    private ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private LoaderService loaderService;
     private volatile boolean monitoringActive = false;
 
     public void monitorDirectory(String directoryPath,
@@ -60,10 +61,13 @@ public class ReaderController {
 
                                 info.appendText("New file detected: " + eventPath + "\n");
 
-                                // Wait a bit to ensure the file is fully written
-                                Thread.sleep(500);
-
                                 File file = eventPath.toFile();
+
+                                Optional<LoaderService> optionalLoaderService = getLoaderService(file);
+                                if (optionalLoaderService.isEmpty()) {
+                                    continue;
+                                }
+                                loaderService = optionalLoaderService.get();
 
                                 // Read and display the file content
                                 loaderService.load(file, data -> Platform.runLater(() -> tableView.getItems().add(data)));

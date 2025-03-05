@@ -1,11 +1,16 @@
 package com.adil.filereader.util;
 
 import com.adil.filereader.service.LoaderService;
+import com.adil.filereader.service.impl.CsvLoaderService;
+import com.adil.filereader.service.impl.TxtLoaderService;
+import com.adil.filereader.service.impl.XmlLoaderService;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public final class AppUtils {
 
@@ -48,5 +53,15 @@ public final class AppUtils {
         String fileName = path.getFileName().toString();
         int lastIndex = fileName.lastIndexOf(".");
         return (lastIndex == -1) ? "" : fileName.substring(lastIndex + 1);
+    }
+
+    public static Optional<LoaderService> getLoaderService(File file) {
+        String fileExtension = getFileExtension(file.getPath());
+        return switch (fileExtension) {
+            case "txt" -> Optional.of(new TxtLoaderService());
+            case "csv" -> Optional.of(new CsvLoaderService());
+            case "xml" -> Optional.of(new XmlLoaderService());
+            default -> Optional.empty();
+        };
     }
 }

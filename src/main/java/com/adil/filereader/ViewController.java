@@ -23,7 +23,7 @@ public class ViewController {
     private TextField checkingInterval;
 
     @FXML
-    private TextArea info;
+    public static TextArea info;
 
     @FXML
     private TableView<StockDataModel> tableView;
