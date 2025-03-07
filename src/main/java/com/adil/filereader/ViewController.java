@@ -1,7 +1,6 @@
 package com.adil.filereader;
 
 import com.adil.filereader.model.StockDataModel;
-import com.adil.filereader.util.AppUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -9,12 +8,13 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 
+import static com.adil.filereader.util.AppUtils.getCheckingInterval;
 import static com.adil.filereader.util.AppUtils.getValidInterval;
-import static com.adil.filereader.util.AppUtils.showSuccessAlert;
+import static com.adil.filereader.util.AppUtils.setCheckingInterval;
 
 public class ViewController {
 
-    private final ReaderController readerController = new ReaderController();
+    private static final ReaderController readerController = new ReaderController();
 
     @FXML
     private TextField path;
@@ -23,7 +23,7 @@ public class ViewController {
     private TextField checkingInterval;
 
     @FXML
-    public static TextArea info;
+    public TextArea info;
 
     @FXML
     private TableView<StockDataModel> tableView;
@@ -49,6 +49,7 @@ public class ViewController {
     @FXML
     public void initialize() {
         info.setEditable(false);
+        checkingInterval.appendText("5");
 
         dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
         openColumn.setCellValueFactory(new PropertyValueFactory<>("open"));
@@ -60,17 +61,21 @@ public class ViewController {
 
     @FXML
     protected void onMonitorButtonClick() {
+        int interval = getValidInterval(checkingInterval);
+        if (interval != -1 && interval != getCheckingInterval()) {
+            setCheckingInterval(interval);
+            readerController.restartMonitoring(path.getText(), info, tableView);
+            return;
+        }
+        onClearTableButtonClick();
         readerController.monitorDirectory(path.getText(), info, tableView);
     }
 
-    @FXML
-    protected void onSaveButtonClick() {
-        int interval = getValidInterval(checkingInterval);
-        if (interval != -1) {
-            AppUtils.CHECKING_INTERVAL = interval;
-            showSuccessAlert("Saved successfully");
-            readerController.restartMonitoring(path.getText(), info, tableView);
-        }
+    public void onClearTableButtonClick() {
+        tableView.getItems().clear();
     }
 
+    public static void stopMonitoring(){
+        readerController.stopMonitoring();
+    }
 }

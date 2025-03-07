@@ -13,8 +13,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.function.Consumer;
 
-import static com.adil.filereader.ViewController.info;
-
 public class XmlLoaderService implements LoaderService {
 
     @Override
@@ -46,7 +44,7 @@ public class XmlLoaderService implements LoaderService {
             }
             eventReader.close();
         } catch (Exception e) {
-            info.appendText(e.getMessage());
+//            info.appendText(e.getMessage());
         }
     }
 

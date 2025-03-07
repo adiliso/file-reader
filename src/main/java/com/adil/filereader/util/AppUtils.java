@@ -17,7 +17,15 @@ public final class AppUtils {
     private AppUtils() {
     }
 
-    public static int CHECKING_INTERVAL = 5;
+    private static int checkingInterval;
+
+    public static int getCheckingInterval() {
+        return checkingInterval;
+    }
+
+    public static void setCheckingInterval(int checkingInterval) {
+        AppUtils.checkingInterval = checkingInterval;
+    }
 
     public static int getValidInterval(TextField textField) {
         String text = textField.getText();

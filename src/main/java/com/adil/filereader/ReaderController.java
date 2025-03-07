@@ -20,7 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static com.adil.filereader.util.AppUtils.CHECKING_INTERVAL;
+import static com.adil.filereader.util.AppUtils.getCheckingInterval;
 import static com.adil.filereader.util.AppUtils.getLoaderService;
 
 public class ReaderController {
@@ -36,7 +36,7 @@ public class ReaderController {
             return;
         }
 
-        info.appendText("Checking interval: " + CHECKING_INTERVAL + "\n");
+        info.appendText("Checking interval: " + getCheckingInterval() + "\n");
 
         monitoringActive = true;
         Path pathToWatch = Paths.get(directoryPath);
@@ -49,7 +49,7 @@ public class ReaderController {
 
                 while (monitoringActive) {
                     try {
-                        WatchKey key = watchService.poll(CHECKING_INTERVAL, TimeUnit.SECONDS);
+                        WatchKey key = watchService.poll(getCheckingInterval(), TimeUnit.SECONDS);
 
                         if (key == null) {
                             continue; // No events, continue monitoring
@@ -80,8 +80,8 @@ public class ReaderController {
                             break;
                         }
 
-                    } catch (Exception e) {
-                        info.appendText("Error: " + e.getMessage() + "\n");
+                    } catch (InterruptedException e) {
+                        info.appendText("Error A: " + e.getMessage() + "\n");
                     }
                 }
 
@@ -95,15 +95,12 @@ public class ReaderController {
 
     public void stopMonitoring() {
         monitoringActive = false;
-        executorService.shutdownNow(); // Force shutdown
+        executorService.shutdownNow();
     }
 
     public void restartMonitoring(String directoryPath, TextArea info, TableView<StockDataModel> tableView) {
-        if (!executorService.isShutdown()) {
-            executorService.shutdownNow(); // Stop existing tasks
-        }
-        executorService = Executors.newSingleThreadExecutor(); // Reinitialize
-        monitorDirectory(directoryPath, info, tableView); // Restart monitoring
+        stopMonitoring();
+        executorService = Executors.newSingleThreadExecutor();
+        monitorDirectory(directoryPath, info, tableView);
     }
-
 }

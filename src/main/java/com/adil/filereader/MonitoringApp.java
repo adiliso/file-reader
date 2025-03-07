@@ -14,10 +14,11 @@ public class MonitoringApp extends Application {
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(MonitoringApp.class.getResource("reader-view.fxml"));
 
-        Scene scene = new Scene(fxmlLoader.load(), 500, 500);
+        Scene scene = new Scene(fxmlLoader.load(), 650, 800);
         scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("style.css")).toExternalForm());
         stage.setTitle("Monitoring App");
         stage.setScene(scene);
+        stage.setOnCloseRequest(windowEvent -> ViewController.stopMonitoring());
         stage.show();
     }
 
