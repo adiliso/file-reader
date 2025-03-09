@@ -5,6 +5,7 @@ import com.adil.filereader.service.impl.CsvLoaderService;
 import com.adil.filereader.service.impl.TxtLoaderService;
 import com.adil.filereader.service.impl.XmlLoaderService;
 import javafx.scene.control.Alert;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 
 import java.io.File;
@@ -17,7 +18,7 @@ public final class AppUtils {
     private AppUtils() {
     }
 
-    private static int checkingInterval;
+    private static int checkingInterval = 5;
 
     public static int getCheckingInterval() {
         return checkingInterval;
@@ -29,19 +30,17 @@ public final class AppUtils {
 
     public static int getValidInterval(TextField textField) {
         String text = textField.getText();
-        int interval;
         try {
-            interval = Integer.parseInt(text);
+            int interval = Integer.parseInt(text);
             if (interval < 1 || interval > 3600) {
                 showErrorAlert("Please enter number in (1 - 3600) interval");
                 return -1;
             }
+            return interval;
         } catch (NumberFormatException e) {
             showErrorAlert("Please enter a valid number");
             return -1;
         }
-
-        return interval;
     }
 
     public static void showErrorAlert(String message) {
@@ -71,5 +70,25 @@ public final class AppUtils {
             case "xml" -> Optional.of(new XmlLoaderService());
             default -> Optional.empty();
         };
+    }
+
+    public static boolean isValidDirectory(String path, TextArea info) {
+        File file = new File(path);
+        if(path.isEmpty()){
+            info.appendText("Enter a director!\n");
+            return false;
+        }
+        if (!file.exists()) {
+            info.appendText("Directory does not exist: " + path + "\n");
+            return false;
+        }
+        if (!file.isDirectory()) {
+            info.appendText(path + " is not a directory\n");
+            return false;
+        }
+        if (!file.canRead()) {
+            info.appendText(path + " is not readable\n");
+        }
+        return true;
     }
 }

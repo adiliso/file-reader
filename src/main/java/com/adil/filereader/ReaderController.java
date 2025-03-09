@@ -22,21 +22,23 @@ import java.util.concurrent.TimeUnit;
 
 import static com.adil.filereader.util.AppUtils.getCheckingInterval;
 import static com.adil.filereader.util.AppUtils.getLoaderService;
+import static com.adil.filereader.util.AppUtils.isValidDirectory;
 
 public class ReaderController {
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
-    private LoaderService loaderService;
     private volatile boolean monitoringActive = false;
 
     public void monitorDirectory(String directoryPath,
                                  TextArea info,
                                  TableView<StockDataModel> tableView) {
+        if (!isValidDirectory(directoryPath, info)) {
+            return;
+        }
+
         if (monitoringActive) {
             info.appendText("Directory monitoring is already active.\n");
             return;
         }
-
-        info.appendText("Checking interval: " + getCheckingInterval() + "\n");
 
         monitoringActive = true;
         Path pathToWatch = Paths.get(directoryPath);
@@ -46,49 +48,40 @@ public class ReaderController {
                 pathToWatch.register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
 
                 info.appendText("Monitoring directory: " + directoryPath + "\n");
+                info.appendText("Checking interval: " + getCheckingInterval() + " s\n");
 
                 while (monitoringActive) {
-                    try {
-                        WatchKey key = watchService.poll(getCheckingInterval(), TimeUnit.SECONDS);
+                    WatchKey key = watchService.take(); // Blocks until an event occurs
 
-                        if (key == null) {
-                            continue; // No events, continue monitoring
+                    for (WatchEvent<?> event : key.pollEvents()) {
+                        if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
+                            Path eventPath = pathToWatch.resolve((Path) event.context());
+                            info.appendText("New file detected: " + eventPath + "\n");
+
+                            File file = eventPath.toFile();
+                            Optional<LoaderService> optionalLoaderService = getLoaderService(file);
+                            optionalLoaderService.ifPresent(loaderService ->
+                                    loaderService.load(file, data ->
+                                            Platform.runLater(() -> tableView.getItems().add(data))
+                                    )
+                            );
                         }
-
-                        for (WatchEvent<?> event : key.pollEvents()) {
-                            if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
-                                Path eventPath = pathToWatch.resolve((Path) event.context());
-
-                                info.appendText("New file detected: " + eventPath + "\n");
-
-                                File file = eventPath.toFile();
-
-                                Optional<LoaderService> optionalLoaderService = getLoaderService(file);
-                                if (optionalLoaderService.isEmpty()) {
-                                    continue;
-                                }
-                                loaderService = optionalLoaderService.get();
-
-                                // Read and display the file content
-                                loaderService.load(file, data -> Platform.runLater(() -> tableView.getItems().add(data)));
-                            }
-                        }
-
-                        boolean valid = key.reset();
-                        if (!valid) {
-                            info.appendText("WatchKey no longer valid. Exiting.\n");
-                            break;
-                        }
-
-                    } catch (InterruptedException e) {
-                        info.appendText("Error A: " + e.getMessage() + "\n");
                     }
-                }
 
+                    boolean valid = key.reset();
+                    if (!valid) {
+                        info.appendText("WatchKey no longer valid. Exiting.\n");
+                        break;
+                    }
+
+                    TimeUnit.SECONDS.sleep(getCheckingInterval());
+                }
             } catch (IOException e) {
-                info.appendText("Failed to initialize WatchService: " + e.getMessage() + "\n");
+                Platform.runLater(() -> info.appendText("Failed to initialize WatchService: " + e.getMessage() + "\n"));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             } finally {
-                monitoringActive = false; // Reset the flag when done
+                monitoringActive = false;
             }
         });
     }
@@ -102,5 +95,9 @@ public class ReaderController {
         stopMonitoring();
         executorService = Executors.newSingleThreadExecutor();
         monitorDirectory(directoryPath, info, tableView);
+    }
+
+    public boolean isMonitoringActive() {
+        return monitoringActive;
     }
 }

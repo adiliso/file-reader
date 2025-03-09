@@ -6,7 +6,6 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.Objects;
 
 public class MonitoringApp extends Application {
 
@@ -15,7 +14,6 @@ public class MonitoringApp extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(MonitoringApp.class.getResource("reader-view.fxml"));
 
         Scene scene = new Scene(fxmlLoader.load(), 650, 800);
-        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("style.css")).toExternalForm());
         stage.setTitle("Monitoring App");
         stage.setScene(scene);
         stage.setOnCloseRequest(windowEvent -> ViewController.stopMonitoring());

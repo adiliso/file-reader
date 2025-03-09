@@ -9,4 +9,5 @@ module com.adil.filereader {
     opens com.adil.filereader to javafx.fxml;
     opens com.adil.filereader.model to javafx.base;
     exports com.adil.filereader;
+    exports com.adil.filereader.model;
 }

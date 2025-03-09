@@ -19,6 +19,8 @@ public class ViewController {
     @FXML
     private TextField path;
 
+    private String previousPath;
+
     @FXML
     private TextField checkingInterval;
 
@@ -48,6 +50,8 @@ public class ViewController {
 
     @FXML
     public void initialize() {
+        path.appendText("");
+        previousPath = "";
         info.setEditable(false);
         checkingInterval.appendText("5");
 
@@ -61,13 +65,14 @@ public class ViewController {
 
     @FXML
     protected void onMonitorButtonClick() {
-        int interval = getValidInterval(checkingInterval);
-        if (interval != -1 && interval != getCheckingInterval()) {
-            setCheckingInterval(interval);
+        onClearTableButtonClick();
+        boolean intervalChanged = intervalChanged();
+        if(intervalChanged) setCheckingInterval(getValidInterval(checkingInterval));
+
+        if (intervalChanged || pathChanged()) {
             readerController.restartMonitoring(path.getText(), info, tableView);
             return;
         }
-        onClearTableButtonClick();
         readerController.monitorDirectory(path.getText(), info, tableView);
     }
 
@@ -75,7 +80,18 @@ public class ViewController {
         tableView.getItems().clear();
     }
 
-    public static void stopMonitoring(){
+    public static void stopMonitoring() {
         readerController.stopMonitoring();
+    }
+
+    private boolean pathChanged() {
+        boolean pathChanged = !previousPath.equals(path.getText());
+        previousPath = path.getText();
+        return readerController.isMonitoringActive() && pathChanged;
+    }
+
+    private boolean intervalChanged() {
+        int interval = getValidInterval(checkingInterval);
+        return interval != -1 && getCheckingInterval() != interval;
     }
 }
