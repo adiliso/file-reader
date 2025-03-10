@@ -1,11 +1,11 @@
 package com.adil.filereader.util;
 
+import com.adil.filereader.logger.TextAreaLogger;
 import com.adil.filereader.service.LoaderService;
 import com.adil.filereader.service.impl.CsvLoaderService;
 import com.adil.filereader.service.impl.TxtLoaderService;
 import com.adil.filereader.service.impl.XmlLoaderService;
 import javafx.scene.control.Alert;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 
 import java.io.File;
@@ -72,23 +72,27 @@ public final class AppUtils {
         };
     }
 
-    public static boolean isValidDirectory(String path, TextArea info) {
+    public static boolean isValidDirectory(String path) {
         File file = new File(path);
-        if(path.isEmpty()){
-            info.appendText("Enter a director!\n");
+        if (path.isEmpty()) {
+            log("Enter a director!\n");
             return false;
         }
         if (!file.exists()) {
-            info.appendText("Directory does not exist: " + path + "\n");
+            log("Directory does not exist: " + path);
             return false;
         }
         if (!file.isDirectory()) {
-            info.appendText(path + " is not a directory\n");
+            log(path + " is not a directory");
             return false;
         }
         if (!file.canRead()) {
-            info.appendText(path + " is not readable\n");
+            log(path + " is not readable");
         }
         return true;
+    }
+
+    public static void log(String text) {
+        TextAreaLogger.getInstance().log(text);
     }
 }

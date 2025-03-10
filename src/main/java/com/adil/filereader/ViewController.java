@@ -1,5 +1,6 @@
 package com.adil.filereader;
 
+import com.adil.filereader.logger.TextAreaLogger;
 import com.adil.filereader.model.StockDataModel;
 import javafx.fxml.FXML;
 import javafx.scene.control.TableColumn;
@@ -22,10 +23,10 @@ public class ViewController {
     private String previousPath;
 
     @FXML
-    private TextField checkingInterval;
+    private TextArea info;
 
     @FXML
-    public TextArea info;
+    private TextField checkingInterval;
 
     @FXML
     private TableView<StockDataModel> tableView;
@@ -50,9 +51,9 @@ public class ViewController {
 
     @FXML
     public void initialize() {
+        TextAreaLogger.getInstance().setTextArea(info);
         path.appendText("");
         previousPath = "";
-        info.setEditable(false);
         checkingInterval.appendText("5");
 
         dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
@@ -67,13 +68,13 @@ public class ViewController {
     protected void onMonitorButtonClick() {
         onClearTableButtonClick();
         boolean intervalChanged = intervalChanged();
-        if(intervalChanged) setCheckingInterval(getValidInterval(checkingInterval));
+        if (intervalChanged) setCheckingInterval(getValidInterval(checkingInterval));
 
         if (intervalChanged || pathChanged()) {
-            readerController.restartMonitoring(path.getText(), info, tableView);
+            readerController.restartMonitoring(path.getText(), tableView);
             return;
         }
-        readerController.monitorDirectory(path.getText(), info, tableView);
+        readerController.monitorDirectory(path.getText(), tableView);
     }
 
     public void onClearTableButtonClick() {

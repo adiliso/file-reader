@@ -4,7 +4,6 @@ import com.adil.filereader.model.StockDataModel;
 import com.adil.filereader.service.LoaderService;
 import javafx.application.Platform;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,20 +22,20 @@ import java.util.concurrent.TimeUnit;
 import static com.adil.filereader.util.AppUtils.getCheckingInterval;
 import static com.adil.filereader.util.AppUtils.getLoaderService;
 import static com.adil.filereader.util.AppUtils.isValidDirectory;
+import static com.adil.filereader.util.AppUtils.log;
 
 public class ReaderController {
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
     private volatile boolean monitoringActive = false;
 
     public void monitorDirectory(String directoryPath,
-                                 TextArea info,
                                  TableView<StockDataModel> tableView) {
-        if (!isValidDirectory(directoryPath, info)) {
+        if (!isValidDirectory(directoryPath)) {
             return;
         }
 
         if (monitoringActive) {
-            info.appendText("Directory monitoring is already active.\n");
+            log("Directory monitoring is already active.");
             return;
         }
 
@@ -47,16 +46,16 @@ public class ReaderController {
             try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
                 pathToWatch.register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
 
-                info.appendText("Monitoring directory: " + directoryPath + "\n");
-                info.appendText("Checking interval: " + getCheckingInterval() + " s\n");
+                log("Monitoring directory: " + directoryPath);
+                log("Checking interval: " + getCheckingInterval() + " s");
 
                 while (monitoringActive) {
-                    WatchKey key = watchService.take(); // Blocks until an event occurs
+                    WatchKey key = watchService.take();
 
                     for (WatchEvent<?> event : key.pollEvents()) {
                         if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
                             Path eventPath = pathToWatch.resolve((Path) event.context());
-                            info.appendText("New file detected: " + eventPath + "\n");
+                            log("New file detected: " + eventPath);
 
                             File file = eventPath.toFile();
                             Optional<LoaderService> optionalLoaderService = getLoaderService(file);
@@ -70,14 +69,14 @@ public class ReaderController {
 
                     boolean valid = key.reset();
                     if (!valid) {
-                        info.appendText("WatchKey no longer valid. Exiting.\n");
+                        log("WatchKey no longer valid. Exiting.");
                         break;
                     }
 
                     TimeUnit.SECONDS.sleep(getCheckingInterval());
                 }
             } catch (IOException e) {
-                Platform.runLater(() -> info.appendText("Failed to initialize WatchService: " + e.getMessage() + "\n"));
+                Platform.runLater(() -> log("Failed to initialize WatchService: " + e.getMessage()));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } finally {
@@ -91,10 +90,10 @@ public class ReaderController {
         executorService.shutdownNow();
     }
 
-    public void restartMonitoring(String directoryPath, TextArea info, TableView<StockDataModel> tableView) {
+    public void restartMonitoring(String directoryPath, TableView<StockDataModel> tableView) {
         stopMonitoring();
         executorService = Executors.newSingleThreadExecutor();
-        monitorDirectory(directoryPath, info, tableView);
+        monitorDirectory(directoryPath, tableView);
     }
 
     public boolean isMonitoringActive() {
