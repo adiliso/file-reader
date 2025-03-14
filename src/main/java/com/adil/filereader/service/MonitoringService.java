@@ -1,7 +1,6 @@
-package com.adil.filereader;
+package com.adil.filereader.service;
 
 import com.adil.filereader.model.StockDataModel;
-import com.adil.filereader.service.LoaderService;
 import javafx.application.Platform;
 import javafx.scene.control.TableView;
 
@@ -24,7 +23,7 @@ import static com.adil.filereader.util.AppUtils.getLoaderService;
 import static com.adil.filereader.util.AppUtils.isValidDirectory;
 import static com.adil.filereader.util.AppUtils.log;
 
-public class ReaderController {
+public class MonitoringService {
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
     private volatile boolean monitoringActive = false;
 
@@ -50,6 +49,8 @@ public class ReaderController {
                 log("Checking interval: " + getCheckingInterval() + " s");
 
                 while (monitoringActive) {
+                    TimeUnit.SECONDS.sleep(getCheckingInterval());
+
                     WatchKey key = watchService.take();
 
                     for (WatchEvent<?> event : key.pollEvents()) {
@@ -59,6 +60,7 @@ public class ReaderController {
 
                             File file = eventPath.toFile();
                             Optional<LoaderService> optionalLoaderService = getLoaderService(file);
+                            TimeUnit.MILLISECONDS.sleep(10);
                             optionalLoaderService.ifPresent(loaderService ->
                                     loaderService.load(file, data ->
                                             Platform.runLater(() -> tableView.getItems().add(data))
@@ -72,11 +74,9 @@ public class ReaderController {
                         log("WatchKey no longer valid. Exiting.");
                         break;
                     }
-
-                    TimeUnit.SECONDS.sleep(getCheckingInterval());
                 }
             } catch (IOException e) {
-                Platform.runLater(() -> log("Failed to initialize WatchService: " + e.getMessage()));
+                log("Failed to initialize WatchService: " + e.getMessage());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } finally {

@@ -1,5 +1,6 @@
 package com.adil.filereader;
 
+import com.adil.filereader.controller.ViewController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
