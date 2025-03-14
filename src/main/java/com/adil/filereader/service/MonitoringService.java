@@ -60,6 +60,7 @@ public class MonitoringService {
 
                             File file = eventPath.toFile();
                             Optional<LoaderService> optionalLoaderService = getLoaderService(file);
+                            TimeUnit.MILLISECONDS.sleep(10);
                             optionalLoaderService.ifPresent(loaderService ->
                                     loaderService.load(file, data ->
                                             Platform.runLater(() -> tableView.getItems().add(data))
