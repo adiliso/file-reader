@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <VBox alignment="TOP_CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.adil.filereader.ViewController" style="-fx-background-color: #f4f4f4;">
+      fx:controller="com.adil.filereader.controller.ViewController" style="-fx-background-color: #f4f4f4;">
 
     <padding>
         <Insets bottom="25.0" left="30.0" right="30.0" top="25.0"/>

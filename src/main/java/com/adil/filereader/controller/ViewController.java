@@ -1,7 +1,8 @@
-package com.adil.filereader;
+package com.adil.filereader.controller;
 
 import com.adil.filereader.logger.TextAreaLogger;
 import com.adil.filereader.model.StockDataModel;
+import com.adil.filereader.service.MonitoringService;
 import javafx.fxml.FXML;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -15,7 +16,7 @@ import static com.adil.filereader.util.AppUtils.setCheckingInterval;
 
 public class ViewController {
 
-    private static final ReaderController readerController = new ReaderController();
+    private static final MonitoringService monitoringService = new MonitoringService();
 
     @FXML
     private TextField path;
@@ -71,10 +72,10 @@ public class ViewController {
         if (intervalChanged) setCheckingInterval(getValidInterval(checkingInterval));
 
         if (intervalChanged || pathChanged()) {
-            readerController.restartMonitoring(path.getText(), tableView);
+            monitoringService.restartMonitoring(path.getText(), tableView);
             return;
         }
-        readerController.monitorDirectory(path.getText(), tableView);
+        monitoringService.monitorDirectory(path.getText(), tableView);
     }
 
     public void onClearTableButtonClick() {
@@ -82,13 +83,13 @@ public class ViewController {
     }
 
     public static void stopMonitoring() {
-        readerController.stopMonitoring();
+        monitoringService.stopMonitoring();
     }
 
     private boolean pathChanged() {
         boolean pathChanged = !previousPath.equals(path.getText());
         previousPath = path.getText();
-        return readerController.isMonitoringActive() && pathChanged;
+        return monitoringService.isMonitoringActive() && pathChanged;
     }
 
     private boolean intervalChanged() {
